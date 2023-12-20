@@ -2,47 +2,53 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
-const genToken = (tokenParams) => {
-  const token = jwt.sign(tokenParams, process.env.SECRET_KEY, {
+const generateToken = (tokenData) => {
+  const token = jwt.sign(tokenData, process.env.SECRET_KEY, {
     expiresIn: "24h",
   });
   return token;
 };
 
-exports.registration = async (req, res) => {
+exports.registerUser = async (req, res) => {
   try {
-    const encryptedPassword = bcrypt.hashSync(
-      req.body["password"],
+    const hashedPassword = bcrypt.hashSync(
+      req.body.password,
       Number(process.env.SALT)
     );
-    const user = await User.create({
+
+    const newUser = await User.create({
       ...req.body,
-      password: encryptedPassword,
+      password: hashedPassword,
     });
-    return res.send({ token: genToken({ id: user._id, email: user.email }) });
-  } catch (_) {
-    return res.send({ message: "Ooops... something went wrong" });
+
+    const token = generateToken({ id: newUser._id, email: newUser.email });
+
+    return res.json({ token });
+  } catch (error) {
+    console.error("Error during registration:", error);
+    return res.status(500).json({ message: "Oops... something went wrong" });
   }
 };
 
-exports.login = async (req, res) => {
-  if (!req.body["email"] || !req.body["password"]) {
-    return res.status(400).send({ message: "all fields are required" });
+exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
   }
 
-  const { email, password } = req.body;
   const foundUser = await User.findOne({ email });
 
-  if (!foundUser)
-    return res.status(401).send({ message: "Invalid Credentials" });
+  if (!foundUser) {
+    return res.status(401).json({ message: "Invalid Credentials" });
+  }
 
   const passwordsMatch = await bcrypt.compare(password, foundUser.password);
 
   if (passwordsMatch) {
-    return res.send({
-      token: genToken({ id: foundUser.id, email: foundUser.email }),
-    });
+    const token = generateToken({ id: foundUser._id, email: foundUser.email });
+    return res.json({ token });
   }
 
-  return res.status(401).send({ message: "Invalid Credentials" });
+  return res.status(401).json({ message: "Invalid Credentials" });
 };

@@ -1,10 +1,11 @@
-const router = require("express").Router();
-const categoryRouter = require("./CategoryRouter");
-const userRouter = require("./UserRouter");
-const postRouter = require("./PostRouter")
+const express = require("express");
+const mainRouter = express.Router();
+const customCategoryRouter = require("./CustomCategoryRouter");
+const customUserRouter = require("./CustomUserRouter");
+const postManagementRouter = require("./PostManagementRouter");
 
-router.use("/category", categoryRouter);
-router.use("/user", userRouter);
-router.use("/create_post", postRouter)
+mainRouter.use("/custom-category", customCategoryRouter);
+mainRouter.use("/custom-user", customUserRouter);
+mainRouter.use("/post-management", postManagementRouter);
 
-module.exports = router;
+module.exports = mainRouter;

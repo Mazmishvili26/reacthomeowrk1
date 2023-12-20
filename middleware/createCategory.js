@@ -1,8 +1,12 @@
-const createCategory = (req, res, next) => {
-  const trimmedName = req.body.name.trim();
+const validateCategory = (req, res, next) => {
+  const categoryName = req.body.name.trim();
 
-  if (!trimmedName) return res.status(422).send({ msg: "Invalid name" });
+  if (!categoryName) {
+    return res.status(422).json({ errorMessage: "Invalid category name" });
+  }
+
+  // Proceed to the next middleware or route handler
   return next();
 };
 
-module.exports = createCategory
+module.exports = validateCategory;

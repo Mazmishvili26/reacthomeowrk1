@@ -1,11 +1,22 @@
 const { Category } = require("../models");
 
-exports.createCategory = async (req, res) => {
+exports.addNewCategory = async (request, response) => {
   try {
-    const trimmedName = req.body.name.trim();
-    const category = await Category.create({ name: trimmedName });
-    return res.send(category);
-  } catch (_) {
-    return res.send({ msg: "Opps.. Something went wrong" });
+    const { name } = request.body;
+    const sanitizedCategoryName = name.trim();
+
+    const newCategory = await Category.create({ name: sanitizedCategoryName });
+
+    return response.status(201).json({
+      success: true,
+      message: "Category created successfully",
+      category: newCategory,
+    });
+  } catch (error) {
+    console.error("Error creating category:", error);
+    return response.status(500).json({
+      success: false,
+      message: "Oops! Something went wrong. Please try again later.",
+    });
   }
 };

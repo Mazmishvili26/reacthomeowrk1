@@ -1,24 +1,31 @@
 const jwt = require("jsonwebtoken");
 
-const verifyToken = (req, res, next) => {
+const authenticateToken = (req, res, next) => {
   const { headers } = req;
 
   if (!headers.authorization) {
-    return res.status(400).send({ msg: "No Authorization header passed" });
+    return res
+      .status(400)
+      .json({ errorMessage: "Authorization header not provided" });
   }
 
-  const [type, token] = headers.authorization.split(" ");
+  const [tokenType, token] = headers.authorization.split(" ");
 
-  if (type !== "Bearer" || !token) {
-    return res.status(401).send({ msg: "Incorrect token or no token passed" });
+  if (tokenType !== "Bearer" || !token) {
+    return res.status(401).json({ errorMessage: "Invalid or missing token" });
   }
+
   try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    req.user = decoded;
-  } catch (err) {
-    return res.status(401).send({ msg: "Invalid authorization info" });
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    req.user = decodedToken;
+  } catch (error) {
+    return res
+      .status(401)
+      .json({ errorMessage: "Invalid authorization information" });
   }
+
+  // Proceed to the next middleware or route handler
   return next();
 };
 
-module.exports = verifyToken;
+module.exports = authenticateToken;
